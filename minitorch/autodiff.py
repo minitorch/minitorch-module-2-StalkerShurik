@@ -3,6 +3,8 @@ from typing import Any, Iterable, List, Tuple
 
 from typing_extensions import Protocol
 
+from functools import cmp_to_key
+
 # ## Task 1.1
 # Central Difference calculation
 
@@ -22,7 +24,9 @@ def central_difference(f: Any, *vals: Any, arg: int = 0, epsilon: float = 1e-6) 
     Returns:
         An approximation of $f'_i(x_0, \ldots, x_{n-1})$
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    vals_eps = list(vals)
+    vals_eps[arg] += epsilon
+    return (f(*vals_eps) - f(*vals)) / epsilon
 
 
 variable_count = 1
@@ -60,7 +64,8 @@ def topological_sort(variable: Variable) -> Iterable[Variable]:
     Returns:
         Non-constant Variables in topological order starting from the right.
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    sort_funct = lambda x,y : x[0].unique_id > y[0].unique_id
+    return sorted(variable, key=cmp_to_key(sort_funct))
 
 
 def backpropagate(variable: Variable, deriv: Any) -> None:
@@ -74,8 +79,18 @@ def backpropagate(variable: Variable, deriv: Any) -> None:
 
     No return. Should write to its results to the derivative values of each leaf through `accumulate_derivative`.
     """
-    raise NotImplementedError("Need to include this file from past assignment.")
+    if variable.is_constant():
+        return
+    
+    if variable.is_leaf():
+        variable.accumulate_derivative(deriv)
+        return
+    
+    pars = variable.chain_rule(deriv)
 
+    for par in topological_sort(pars):
+        backprop_next, deriv_next = par[0], par[1]
+        backpropagate(backprop_next, deriv_next)
 
 @dataclass
 class Context:
