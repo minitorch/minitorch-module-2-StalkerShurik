@@ -5,6 +5,8 @@ Be sure you have minitorch installed in you Virtual Env.
 
 import minitorch
 
+import minitorch.tensor_functions
+
 
 def RParam(*shape):
     r = 2 * (minitorch.rand(shape) - 0.5)
@@ -21,24 +23,36 @@ class Network(minitorch.Module):
         self.layer3 = Linear(hidden_layers, 1)
 
     def forward(self, x):
-        # TODO: Implement for Task 2.5.
-        raise NotImplementedError("Need to implement for Task 2.5")
+        print(x.shape)
+        x = self.layer1(x).relu()
+        print(x.shape)
+        x = self.layer2(x).relu()
+        print(x.shape)
+        x = self.layer3(x).relu()
+        return x
 
 
 class Linear(minitorch.Module):
     def __init__(self, in_size, out_size):
         super().__init__()
-        self.weights = RParam(in_size, out_size)
+        self.weights = RParam(in_size, out_size, 1)
         self.bias = RParam(out_size)
         self.out_size = out_size
 
     def forward(self, x):
-        # TODO: Implement for Task 2.5.
-        raise NotImplementedError("Need to implement for Task 2.5")
+        # print(x.shape)
+        # print(self.weights.value.shape)
+        # print(self.bias.value.shape)
+
+        # print(x.permute(1,0).shape)
+
+        
+
+        return (x.permute(1,0) * self.weights.value).sum(0).permute(0,2,1) + self.bias.value
 
 
 def default_log_fn(epoch, total_loss, correct, losses):
-    print("Epoch ", epoch, " loss ", total_loss, "correct", correct)
+    print("Epoch ", epoch, " loss ", total_loss, "correctß", correct)
 
 
 class TensorTrain:

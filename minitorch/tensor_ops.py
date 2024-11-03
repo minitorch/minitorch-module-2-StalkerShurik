@@ -218,7 +218,7 @@ class SimpleOps(TensorOps):
             f(*out.tuple(), *a.tuple(), dim)
             return out
 
-        return ret
+        return ret      
 
     @staticmethod
     def matrix_multiply(a: "Tensor", b: "Tensor") -> "Tensor":
@@ -268,8 +268,13 @@ def tensor_map(fn: Callable[[float], float]) -> Any:
         in_shape: Shape,
         in_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+        
+        for i in range(np.size(out)): #out is bigger so use broadcast index
+            out_index = np.zeros_like(out_shape)
+            in_index = np.zeros_like(in_shape)
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, in_shape, in_index)
+            out[i] = fn(in_storage[index_to_position(in_index, in_strides)])
 
     return _map
 
@@ -318,9 +323,17 @@ def tensor_zip(fn: Callable[[float, float], float]) -> Any:
         b_shape: Shape,
         b_strides: Strides,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
 
+        for i in range(np.size(out)):
+
+            out_index = np.zeros_like(out_shape)
+            a_index = np.zeros_like(a_shape)
+            b_index = np.zeros_like(b_shape)
+            to_index(i, out_shape, out_index)
+            broadcast_index(out_index, out_shape, a_shape, a_index)
+            broadcast_index(out_index, out_shape, b_shape, b_index)
+
+            out[i] = fn(a_storage[index_to_position(a_index, a_strides)], b_storage[index_to_position(b_index, b_strides)])
     return _zip
 
 
@@ -354,8 +367,15 @@ def tensor_reduce(fn: Callable[[float, float], float]) -> Any:
         a_strides: Strides,
         reduce_dim: int,
     ) -> None:
-        # TODO: Implement for Task 2.3.
-        raise NotImplementedError("Need to implement for Task 2.3")
+            
+            for i in range(np.size(out)):
+                out_index = np.zeros_like(out_shape)
+                to_index(i, out_shape, out_index)
+                a_index = out_index.copy()
+                out[i] = a_storage[index_to_position(a_index, a_strides)]
+                for j in range(1, a_shape[reduce_dim]):
+                    a_index[reduce_dim] = j
+                    out[i] = fn(out[i], a_storage[index_to_position(a_index, a_strides)])
 
     return _reduce
 

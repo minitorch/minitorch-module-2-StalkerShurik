@@ -62,13 +62,13 @@ def test_one_derivative(
 @pytest.mark.task2_4
 def test_permute(data: DataObject, t1: Tensor) -> None:
     "Test the permute function"
+
     permutation = data.draw(permutations(range(len(t1.shape))))
 
     def permute(a: Tensor) -> Tensor:
         return a.permute(*permutation)
-
+    
     grad_check(permute, t1)
-
 
 def test_grad_size() -> None:
     "Test the size of the gradient (from @WannaFy)"
@@ -94,6 +94,7 @@ def test_grad_reduce(
 ) -> None:
     "Test the grad of a tensor reduce"
     name, _, tensor_fn = fn
+    print(name)
     grad_check(tensor_fn, t1)
 
 

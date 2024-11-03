@@ -43,8 +43,7 @@ def index_to_position(index: Index, strides: Strides) -> int:
         Position in storage
     """
 
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    return np.dot(index, strides)
 
 
 def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
@@ -60,8 +59,11 @@ def to_index(ordinal: int, shape: Shape, out_index: OutIndex) -> None:
         out_index : return index corresponding to position.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError("Need to implement for Task 2.1")
+    N = len(shape)
+    prod = 1
+    for i in range(N):
+        out_index[N - i - 1] = ordinal // prod % shape[N - i - 1]
+        prod *= shape[N - i - 1]
 
 
 def broadcast_index(
@@ -83,8 +85,16 @@ def broadcast_index(
     Returns:
         None
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+
+    diff = np.size(big_shape) - np.size(shape)
+
+    for i in range(np.size(shape)):
+        if shape[i] == big_shape[diff + i]:
+            out_index[i] = big_index[diff + i]
+        else:
+            out_index[i] = 0
+
+
 
 
 def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
@@ -101,8 +111,21 @@ def shape_broadcast(shape1: UserShape, shape2: UserShape) -> UserShape:
     Raises:
         IndexingError : if cannot broadcast
     """
-    # TODO: Implement for Task 2.2.
-    raise NotImplementedError("Need to implement for Task 2.2")
+    size_1 = np.size(shape1)
+    size_2 = np.size(shape2)
+    size_max = max(size_1, size_2)
+
+    shape1 = np.concatenate((np.ones(size_max - size_1).astype(np.int32), shape1))
+    shape2 = np.concatenate((np.ones(size_max - size_2).astype(np.int32), shape2))
+
+    broadcasted_shape = []
+
+    for i in range(size_max):
+        if shape1[i] > 1 and shape2[i] > 1 and shape1[i] != shape2[i]:
+            raise IndexingError
+        broadcasted_shape.append(max(shape1[i], shape2[i]))
+
+    return tuple(broadcasted_shape)
 
 
 def strides_from_shape(shape: UserShape) -> UserStrides:
@@ -140,12 +163,12 @@ class TensorData:
         assert isinstance(shape, tuple), "Shape must be tuple"
         if len(strides) != len(shape):
             raise IndexingError(f"Len of strides {strides} must match {shape}.")
-        self._strides = array(strides)
-        self._shape = array(shape)
-        self.strides = strides
+        self._strides = array(strides).astype(int)
+        self._shape = array(shape).astype(int)
+        self.strides = tuple([int(x) for x in strides])
         self.dims = len(strides)
         self.size = int(prod(shape))
-        self.shape = shape
+        self.shape = tuple([int(x) for x in shape])
         assert len(self._storage) == self.size
 
     def to_cuda_(self) -> None:  # pragma: no cover
@@ -221,9 +244,9 @@ class TensorData:
         assert list(sorted(order)) == list(
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
-
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError("Need to implement for Task 2.1")
+        
+        newt = TensorData(np.copy(self._storage), tuple(self._shape[np.array(order).astype(np.int32)]), tuple(self._strides[np.array(order).astype(np.int32)]))
+        return newt
 
     def to_string(self) -> str:
         s = ""
